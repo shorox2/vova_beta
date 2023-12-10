@@ -11,7 +11,7 @@ ikb_choice = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 ikb_simple_choice = InlineKeyboardMarkup(row_width=2, inline_keyboard=[
-    [InlineKeyboardButton(text='Да, расскажи про тарифы', callback_data=light_cb.new('yes')), InlineKeyboardButton(text="Нет", callback_data=light_cb.new('no'))]
+    [InlineKeyboardButton(text='Да, расскажи про тарифы', callback_data=light_cb.new('yes'))]
 ])
 
 ikb_obrez = InlineKeyboardMarkup(row_width=1,inline_keyboard=[

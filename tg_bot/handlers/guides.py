@@ -2,10 +2,15 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.types import InputFile
+from gspread_asyncio import AsyncioGspreadClient
+
 from tg_bot.keyboards.inline import ikb_choice, cb, ikb_simple_choice, ikb_obrez
 from aiogram.dispatcher.storage import FSMContext
-from tg_bot.misc.states import AnswerStateGroup
+from tg_bot.misc.states import AnswerStateGroup, DatingStateGroup
 import asyncio
+
+from tg_bot.services.google_shets import fill_in_data, refactor_in_data
+
 
 async def send_guide_cmd(message: types.Message):
     await message.answer(text='Забирай)',
@@ -36,6 +41,7 @@ async def choice_no_cmd(call: types.CallbackQuery, callback_data: dict):
 
 
 async def question_cmd(message: types.Message, state: FSMContext):
+
     await message.answer(f'Благодарю тебя за отзыв!\n'
                     'Кстати, сейчас есть уникальная возможность присоединиться к моему 2-х недельному детокс-марафону!\n'
                     'Этот марафон создан для того, чтобы в короткие сроки освободить организм от токсинов,'
@@ -48,7 +54,18 @@ async def question_cmd(message: types.Message, state: FSMContext):
                           '- Получишь заряд энергии и бодрости\n'
                           'Хочешь узнать подробнее?',
                           reply_markup=ikb_simple_choice)
-    await state.finish()
+    google_client_manager = message.bot.get('google_client_manager')
+    google_client: AsyncioGspreadClient = await google_client_manager.authorize()
+    #Обновить табличку
+    async with state.proxy() as data:
+        data['guide'] = message.text
+        fdata = (data['id'], data['guide'])
+    data_fsm = await state.get_data()
+    key = data_fsm.get('spreadsheet')
+    spreadsheet = await google_client.open_by_key(key)
+    worksheet = await spreadsheet.get_worksheet(0)
+    await refactor_in_data(worksheet, fdata)
+    await state.reset_state(with_data=False)
 
 
 def register_guide_command(dp: Dispatcher):
