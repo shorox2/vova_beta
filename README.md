@@ -1,1 +1,0 @@
-# vova_beta
